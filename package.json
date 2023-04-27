@@ -1,0 +1,21 @@
+{
+  "name": "socprotheus",
+  "version": "1.0.0",
+  "description": "Integracao entre os sistemas soc e protheus para pagamento de nf",
+  "main": "index.js",
+  "scripts": {
+    "start": "node --watch index.js",
+    "test": "test"
+  },
+  "author": "TI - RHMED",
+  "license": "ISC",
+  "dependencies": {
+    "axios": "^0.27.2",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mssql": "^9.1.1",
+    "request": "^2.88.2",
+    "soap": "^1.0.0",
+    "unzipper": "^0.10.11"
+  }
+}
