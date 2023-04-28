@@ -4,7 +4,7 @@ const apiController = require('./controllers/apiController');
 
 const routes = express.Router()
 
-routes.post('/consumirArquivos', apiController.baixarArquivos)
+routes.get('/buscarArquivosMalote', apiController.buscarArquivosMalote)
 
 routes.get('/status', (req, res) => {
     res.status(200).json({Status: "API online"})
