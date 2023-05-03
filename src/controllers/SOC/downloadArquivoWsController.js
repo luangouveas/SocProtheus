@@ -76,29 +76,14 @@ async function baixarArquivoSocGed(xml){
 module.exports = {
 
     async buscarArquivosMalote(malote){
-        /*  
-            precisa consultar a lista de arquivos desse lote
-            realizar um loop para cada arquivo
-            validar se o arquivo ja existe na amazon
-                senao 
-                    baixar o arquivo
-                    upload para a amazon
-            recuperar o link do arquivo na amazon
-            incrementar a lista de retorno com nome e link de cada arquivo
-            retornar lista de arquivos            
-        */
-
-        const arquivos = []
-
         return new Promise (async (resolve, reject) => {
             try {
-            
+                const arquivos = [];
                 const documentos = await leitura.buscarDocumentosLoteSoc(malote);
-                //console.log(documentos)
+                const amz = new amazon();
     
                 for (let i = 0; i < documentos.length; i++) {
                     const doc = documentos[i];
-                    //console.log(doc)
                 
                     if (!doc.codArqDigitalizadoAmazon){ //console.log('nao ta na amazon')
                         
@@ -108,36 +93,41 @@ module.exports = {
     
                         const arquivoExtraido = pathDestino + nomeFinalArquivo
     
-                        console.log('#0 - gerando xml')
+                        console.log('#0 - Gerando xml')
                         const xml = await montarXml(doc);
                         
-                        console.log('#1 - chamando web service')
+                        console.log('#1 - Chamando web service')
+
                         await baixarArquivoSocGed(xml)
                         .then(async () => await Util.salvarNovoZipTratado(pathFile, novoPathFile))
                         .then(async () => await Util.extrairArquivoDoZip(novoPathFile, nomeAtualArquivo, arquivoExtraido))
-                        //.then(async () => await amazon.uploadAmazon(arquivoExtraido))
-                        .catch((error)=>{
-                            reject(error)
+                        .then(async () => await amz.upload(arquivoExtraido))
+                        .then(async (uuid) => { 
+                            const url = await amz.getUrlArquivo(uuid);
+                            
+                            arquivos.push({
+                                nome : doc.NM_ARQUIVOS_GED,
+                                caminho : url
+                            });
+
+                            //...inserir o arquivo digitalizado na tabela ArquivoDigitalizadoAmazon
+                            //...inserir o arquivo na tabela MovimentoCredenciadoDocumentoDigitalizado
                         })
-    
-                        //...inserir o arquivo digitalizado na tabela ArquivoDigitalizadoAmazon
-                        //...inserir o arquivo na tabela MovimentoCredenciadoDocumentoDigitalizado
-                        //await limparPastaTemporaria()
-    
-                    }else{ //console.log('ta na amazon');
-                        
-                    }
-    
-                    // const linkArquivoAmazon = await amazon.recuperarLinkAmazon(doc.codArqDigitalizadoAmazon)
-            
-                    arquivos.push({
-                        nome : doc.NM_ARQUIVOS_GED,
-                        caminho : 'linkArquivoAmazon'
-                    })           
+                        .then(async () => {
+                            await Util.excluirArquivosDaPasta(pathDestino);
+                        })
+                        .catch((error) => {
+                            reject(error);
+                        });
+                    }//else{ //console.log('ta na amazon');
+                     //   urlArquivo = await amz.getUrlArquivo(doc.codArqDigitalizadoAmazon)
+                    //}       
                 }
                 
                 resolve(arquivos);
+
             } catch (error) {
+                console.log(error);
                 reject("Houve um erro inesperado!");
             }
         });

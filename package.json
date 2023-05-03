@@ -4,17 +4,19 @@
   "description": "Integracao entre os sistemas soc e protheus para pagamento de nf",
   "main": "",
   "scripts": {
-    "start-api": "node --watch ./src/api/index.js",
+    "start-api": "node ./src/api/index.js",
     "start-job": "node --watch ./src/job/index.js"
   },
   "author": "TI - RHMED",
   "license": "ISC",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.321.1",
+    "@aws-sdk/s3-request-presigner": "^3.325.0",
     "aws-sdk": "^2.1368.0",
     "axios": "^0.27.2",
     "dotenv": "^16.0.3",
     "express": "^4.18.2",
+    "mime": "^3.0.0",
     "mssql": "^9.1.1",
     "request": "^2.88.2",
     "soap": "^1.0.0",
