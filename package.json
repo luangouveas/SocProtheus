@@ -4,7 +4,7 @@
   "description": "Integracao entre os sistemas soc e protheus para pagamento de nf",
   "main": "",
   "scripts": {
-    "start-api": "node ./src/api/index.js",
+    "start-api": "node --watch ./src/api/index.js",
     "start-job": "node --watch ./src/job/index.js"
   },
   "author": "TI - RHMED",
@@ -19,6 +19,7 @@
     "mime": "^3.0.0",
     "mssql": "^9.1.1",
     "request": "^2.88.2",
+    "rimraf": "^5.0.0",
     "soap": "^1.0.0",
     "unzipper": "^0.10.11"
   }

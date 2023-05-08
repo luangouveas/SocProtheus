@@ -19,14 +19,14 @@ class amazon{
         this.bucket = process.env.AWS_BUCKET;
     }
 
-    async upload(pathFile){
+    async upload(caminhoArquivo){
         return new Promise(async (resolve, reject) => {
             try {
                 console.log('#6 - Realizando o upload do arquivo para a amazon');
         
-                const uuid = uuidv4();
+                const uuid = uuidv4().toUpperCase();
                 const caminhoArquivoAmazon = 'arquivos/' + uuid;    
-                const originalPath = path.resolve(__dirname, '..', '..', pathFile) ;
+                const originalPath = path.resolve(__dirname, '..', '..', caminhoArquivo) ;
                 const conteudoArquivo = await fs.promises.readFile(originalPath); 
                 const contentType = mime.getType(originalPath);    
                 

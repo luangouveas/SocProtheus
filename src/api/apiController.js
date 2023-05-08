@@ -1,10 +1,10 @@
-const downloadArquivoWsController = require('./SOC/downloadArquivoWsController');
+const downloadArquivo = require('../controllers/downloadArquivo');
 
 module.exports = {
 
     async buscarArquivosMalote(req, res){
         const malote = req.query.malote;
-        await downloadArquivoWsController.buscarArquivosMalote(malote)
+        await downloadArquivo.buscarArquivosMalote(malote)
             .then((Arquivos) => {
                 res.status(200).json(Arquivos)
             })
@@ -15,7 +15,7 @@ module.exports = {
 
     async testeUpload(req, res){
         const urlArquivo = req.query.urlArquivo;
-        const amazon = require('./amazon');
+        const amazon = require('../controllers/amazon');
         const amz = new amazon()
         const uuid = await amz.upload(urlArquivo); 
 
@@ -24,7 +24,7 @@ module.exports = {
 
     async testeRecuperarUrl(req, res){
         const uuid = req.query.uuid;
-        const amazon = require('./amazon');
+        const amazon = require('../controllers/amazon');
         const amz = new amazon();
         const url = await amz.getUrlArquivo(uuid);
 
@@ -33,7 +33,7 @@ module.exports = {
 
     async testeUploadGetUrl(req, res){
         const urlArquivo = req.query.urlArquivo;
-        const amazon = require('./amazon');
+        const amazon = require('../controllers/amazon');
         const amz = new amazon()
         const uuid = await amz.upload(urlArquivo); 
         const url = await amz.getUrlArquivo(uuid);
