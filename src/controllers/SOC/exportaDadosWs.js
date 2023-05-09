@@ -32,9 +32,8 @@ module.exports = {
 
         await axios.post(process.env.URL_SERVICE_EXPORTA_DADOS, montarXml(parametros), options)
             .then(function (response){
-                //tratar esse data e devolver o objeto json com os arquivos a serem baixados
-                const arquivos = response.data
-                return arquivos;
+                const ret = response.data
+                return ret;
             })
             .catch(function (error) {
                 console.log(error);
