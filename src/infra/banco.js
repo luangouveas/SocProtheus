@@ -1,4 +1,5 @@
 const sql = require('./conectarDB');
+const { db } = require('./knex');
 
 async function buscarDocumentosLoteSoc(malote){
     //const request = new db.Request()
@@ -36,8 +37,94 @@ async function atualizarArquivoImportado(doc, codArqDigitalizadoAmazon){
     return result;
 }
 
+async function salvarArquivoGed(arquivoGed){
+    return new Promise(async (resolve, reject) => {
+        try {
+            const now = new Date();
+
+            await db('SocProtheus_ArquivoGed')
+            .select()
+            .where('CD_GED', arquivoGed.CD_GED)
+            .andWhere('CD_ARQUIVO_GED', arquivoGed.CD_ARQUIVO_GED)
+            .then(function(rows){
+                if(rows.length === 0){
+                    db('SocProtheus_ArquivoGed')
+                    .insert({
+                        CD_EMPRESA                  : arquivoGed.CD_EMPRESA,
+                        CD_UNIDADE                  : arquivoGed.CD_UNIDADE,
+                        CD_GED                      : arquivoGed.CD_GED,
+                        NM_GED                      : arquivoGed.NM_GED,
+                        DT_VALIDADE                 : arquivoGed.DT_VALIDADE,
+                        DT_EMISSAO                  : arquivoGed.DT_EMISSAO,
+                        IC_CRIADO_SOCNET            : arquivoGed.IC_CRIADO_SOCNET,
+                        CD_FUNCIONARIO              : arquivoGed.CD_FUNCIONARIO,
+                        DATAFICHA                   : arquivoGed.DATAFICHA,
+                        TIPOFICHA                   : arquivoGed.TIPOFICHA,
+                        CD_ARQUIVO_GED              : arquivoGed.CD_ARQUIVO_GED,
+                        NM_ARQUIVOS_GED             : arquivoGed.NM_ARQUIVOS_GED,
+                        IC_ASSINADO_DIGITALMENTE    : arquivoGed.IC_ASSINADO_DIGITALMENTE,
+                        CD_TIPO_GED                 : arquivoGed.CD_TIPO_GED,
+                        SEQUENCIAL_FICHA            : arquivoGed.SEQUENCIAL_FICHA,
+                        NOME_FUNCIONARIO            : arquivoGed.NOME_FUNCIONARIO,
+                        CPF_FUNCIONARIO             : arquivoGed.CPF_FUNCIONARIO,
+                        MATRICULA_FUNCIONARIO       : arquivoGed.MATRICULA_FUNCIONARIO,
+                        UNIDADE                     : arquivoGed.UNIDADE,
+                        DT_UPLOAD_ARQUIVO           : arquivoGed.DT_UPLOAD_ARQUIVO,
+                        OBSERVACAO                  : arquivoGed.OBSERVACAO,
+                        HR_UPLOAD_ARQUIVO           : arquivoGed.HR_UPLOAD_ARQUIVO,
+                        datInclusaoRegistro         : now,
+                        codArqDigitalizadoAmazon    : null
+                    })
+                    .catch(function(ex) {
+                        console.log("Erro: " + ex.message)
+                        //reject("Erro: " + ex.message);
+                    })
+                }
+            });
+
+            resolve();
+
+        } catch (error) {
+            //console.error('Erro ao tentar inserir dado no banco: '+ error);
+            reject('Erro ao tentar inserir dado no banco: ' + error);
+        }
+    }); 
+    
+}
+
+async function salvarLote(lote){
+    return new Promise(async (resolve, reject) => {
+        try {
+            const now = new Date();
+            await db('SocProtheus_LotePrestadorSoc')
+            .select()
+            .where('codPrestador', lote.codPrestador)
+            .andWhere('NumeroLote', lote.NumeroLote)
+            .then(function(rows){
+                if(rows.length === 0){
+                    db('SocProtheus_LotePrestadorSoc')
+                    .insert({
+                        // ....
+                    })
+                    .catch(function(ex) {
+                        console.log("Erro: " + ex.message)
+                        //reject("Erro: " + ex.message);
+                    });
+                }
+            });
+
+            resolve();
+
+        } catch (error) {
+            reject('Erro ao tentar inserir dado no banco: ' + error);
+        }
+    });
+}
+
 module.exports = { 
     buscarDocumentosLoteSoc,
     inserirArquivoDigitalizadoAmazon,
-    atualizarArquivoImportado
+    atualizarArquivoImportado,
+    salvarArquivoGed,
+    salvarLote
 }

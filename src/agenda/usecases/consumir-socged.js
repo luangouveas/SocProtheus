@@ -1,15 +1,33 @@
 require('dotenv').config();
+const { format } = require('date-fns');
 const exportaDadosWs = require('../../controllers/SOC/exportaDadosWs');
-
-const { ED_GED_COD, ED_GED_CHAVE } = process.env;
-
-//const parametros = "{'empresa':'414531','codigo':'"+ ED_LOTES_COD + "','chave':'"+ ED_LOTES_CHAVE + "','tipoSaida':'xml','codigoPrestador':'"+codigoPrestador+"','cnpjPrestador':'','cpfPrestador':'','numeroLote':'"+numeroLote+"'" +
-//",'numeroDoc':'','dataInicial':'" + dataInicial + "', 'dataFinal':'"+ dataFinal.ToString("dd/MM/yyyy") + "','statusLote':'3'}";
+const db = require('../../infra/banco');
+const { ED_GED_COD, ED_GED_CHAVE, ED_EMPRESA_PRINCIPAL } = process.env;
 
 module.exports = {
 
     async consumirSocGed(){
-        //await exportaDadosWs.consumirExportaDados(parametros);
-    }
-    
+        return new Promise(async (resolve, reject) => {
+            const dataAtual = new Date();
+            const dataAtualFormatada = format(dataAtual, 'dd/MM/yyyy');
+            const parametros = `{'empresa':'${ED_EMPRESA_PRINCIPAL}','codigo':'${ED_GED_COD}','chave':'${ED_GED_CHAVE}','tipoSaida':'json','tipoBusca':'0','sequencialFicha':'','cpfFuncionario':'','filtraPorTipoSocged':'true','codigoTipoSocged':'39','dataInicio':'${dataAtualFormatada}','dataFim':'${dataAtualFormatada}','dataEmissaoInicio':'','dataEmissaoFim':''}`;
+
+            const retorno = await exportaDadosWs.consumirExportaDados(parametros);
+
+            if(retorno){
+                retorno.forEach(async (arqGed) => {
+                    //console.log('inserindo : ' + arqGed.NM_GED);
+                    
+                    await db.salvarArquivoGed(arqGed)
+                        .then(() => {
+                            resolve();
+                        })
+                        .catch((error) => {
+                            reject(error);
+                        });
+                    
+                });
+            }
+        });        
+    }    
 }

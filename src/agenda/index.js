@@ -11,23 +11,27 @@ const jobs = [
 ];
 
 (async function() {
-    const agenda = new Agenda({
-        db: { address: mongoConnectionString }
-    });
-
-    jobs.forEach((job) => {
-        agenda.define(job.name, {}, async () => {
-            await job.command(app);
+    try {
+        const agenda = new Agenda({
+            db: { address: mongoConnectionString }
         });
-    });
-
-    await agenda.start();
-
-    const agendamentos = jobs.map(async(job) => {
-        await agenda.every(job.frequencia, job.name);
-    });
-
-    await Promise.all(agendamentos);
-
-    console.log('Agenda ativa');
+    
+        jobs.forEach((job) => {
+            agenda.define(job.name, {}, async () => {
+                await job.command(app);
+            });
+        });
+    
+        await agenda.start();
+    
+        const agendamentos = jobs.map(async(job) => {
+            await agenda.every(job.frequencia, job.name);
+        });
+    
+        await Promise.all(agendamentos);
+    
+        console.log('Agenda ativa');
+    } catch (error) {
+        console.log(error);
+    }
 })();

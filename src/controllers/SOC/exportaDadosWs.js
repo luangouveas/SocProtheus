@@ -1,4 +1,5 @@
 const axios = require('axios');
+const xml2js = require('xml2js');
 require('dotenv').config();
 
 const montarXml = function(parametros){
@@ -22,22 +23,27 @@ module.exports = {
     
     async consumirExportaDados(parametros){
 
-        const options = {
-            headers : {
-                'Accept-Encoding':'gzip,deflate',
-                'SOAPAction':'',
-                'Content-Type':'text/xml;charset=Utf-8'
+        return new Promise( async(resolve, reject) => {
+            const options = {
+                headers : {
+                    'Accept-Encoding':'gzip,deflate',
+                    'SOAPAction':'',
+                    'Content-Type':'text/xml;charset=Utf-8'
+                }
             }
-        }
-
-        await axios.post(process.env.URL_SERVICE_EXPORTA_DADOS, montarXml(parametros), options)
-            .then(function (response){
-                const ret = response.data
-                return ret;
-            })
-            .catch(function (error) {
-                console.log(error);
-            })
+    
+            await axios.post(process.env.URL_SERVICE_EXPORTA_DADOS, montarXml(parametros), options)
+                .then(function (response){
+                    xml2js.parseString(response.data, (err, result) => {
+                        const ret = result['soap:Envelope']['soap:Body'][0]['ns2:exportaDadosWsResponse'][0]['return'][0]['retorno'][0];
+                        resolve(JSON.parse(ret));
+                    });                    
+                })
+                .catch(function (error) {
+                    reject("Ocorreu um erro ao tentar processar exporta dados");
+                })
+        });
+        
     }
     
 }
