@@ -6,7 +6,7 @@ async function buscarDocumentosLoteSoc(malote){
 
     var strQuery = `select g.*, amz.codGuidArqDigitalizadoAmazon
     from SocProtheus_ArquivoGed g 
-    left join SocProtheus_ArquivoDigitalizadoAmazon amz on amz.codArqDigitalizadoAmazon = g.codArqDigitalizadoAmazon
+    left join ArquivoDigitalizadoAmazon amz on amz.codArqDigitalizadoAmazon = g.codArqDigitalizadoAmazon
     where g.NM_GED = '${malote}'`
 
     const result = await sql.query(strQuery)
@@ -16,7 +16,7 @@ async function buscarDocumentosLoteSoc(malote){
 }
 
 async function inserirArquivoDigitalizadoAmazon(codGuidArqDigitalizadoAmazon){
-    var strSql = ` insert into SocProtheus_ArquivoDigitalizadoAmazon(datInclusao, codGuidArqDigitalizadoAmazon)
+    var strSql = ` insert into ArquivoDigitalizadoAmazon(datInclusao, codGuidArqDigitalizadoAmazon)
     OUTPUT inserted.codArqDigitalizadoAmazon
     values(GETDATE(), '${codGuidArqDigitalizadoAmazon}')`
 
@@ -95,25 +95,60 @@ async function salvarArquivoGed(arquivoGed){
 async function salvarLote(lote){
     return new Promise(async (resolve, reject) => {
         try {
+            //console.log(lote);
+
             const now = new Date();
+            const codigoLote = `${lote.CodPrestador}-${lote.NumeroLote}`;
+
             await db('SocProtheus_LotePrestadorSoc')
             .select()
-            .where('codPrestador', lote.codPrestador)
-            .andWhere('NumeroLote', lote.NumeroLote)
-            .then(function(rows){
+            .where('codigoLote', codigoLote)
+            .then(async function(rows){
                 if(rows.length === 0){
-                    db('SocProtheus_LotePrestadorSoc')
-                    .insert({
-                        // ....
+                    await db('SocProtheus_LotePrestadorSoc')
+                    .insert({           
+                        codPrestador            : lote.CodPrestador  ,
+                        nomePrestador           : lote.NomePrestador ,
+                        RazaoSocial             : lote.RazaoSocial   ,
+                        TipoPessoa              : lote.TipoPessoa    ,
+                        EmailPrestador          : lote.EmailPrestador,
+                        NumeroDoc               : lote.NumeroDoc     ,
+                        DtEmissaoDoc            : lote.DtEmissaoDoc  ,
+                        ValorDoc                : lote.ValorDoc      ,
+                        DtPostagem              : lote.DtPostagem    ,
+                        DtRecebimento           : lote.DtRecebimento ,
+                        PagarAte                : lote.PagarAte      ,
+                        TipoPagamento           : lote.TipoPagamento ,
+                        NumeroLote              : lote.NumeroLote    ,
+                        StatusLote              : lote.StatusLote    ,
+                        DtCriacaoLote           : lote.DtCriacaoLote ,
+                        PagAntecipado           : lote.PagAntecipado ,
+                        CPFPrestador            : lote.CPFPrestador  ,
+                        CNPJPrestador           : lote.CNPJPrestador ,
+                        CodigoBanco             : lote.CodigoBanco   ,
+                        Banco                   : lote.Banco         ,
+                        CodigoAgencia           : lote.CodigoAgencia ,
+                        ContaCorrente           : lote.ContaCorrente ,
+                        DtPagamento             : lote.DtPagamento   ,
+                        datInclusaoRegistro     : now,
+                        codStatusAprovacaoFluig : 1,
+                        codigoLote              : codigoLote
                     })
+                    /*.then(function(){
+                        console.log("inseriu!");
+                    })*/
                     .catch(function(ex) {
-                        console.log("Erro: " + ex.message)
-                        //reject("Erro: " + ex.message);
+                        //console.log("Erro ao inserir o " + lote.NumeroLote + ': ' + ex.message)
+                        //console.log(lote)
+                        reject("Erro: " + ex.message);
                     });
                 }
-            });
 
-            resolve();
+                resolve();
+            })
+            .catch((error) => {
+                reject('Erro: ' + error);
+            });          
 
         } catch (error) {
             reject('Erro ao tentar inserir dado no banco: ' + error);

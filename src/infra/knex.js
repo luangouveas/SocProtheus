@@ -2,7 +2,7 @@ require('dotenv').config()
 const createConnection = require('knex');
 const { EventEmitter } = require('events');
 
-const { DB_USER, DB_PWD, DB_NAME_INTEGRACAO, DB_HOST } = process.env;
+const { DB_USER, DB_PWD, DB_NAME, DB_HOST } = process.env;
 
 const config = {
     client: 'mssql',
@@ -10,7 +10,7 @@ const config = {
       host: DB_HOST,
       user: DB_USER,
       password: DB_PWD,
-      database: DB_NAME_INTEGRACAO,
+      database: DB_NAME,
       timezone: 'America/Sao_Paulo'
     },
     useNullAsDefault: true 

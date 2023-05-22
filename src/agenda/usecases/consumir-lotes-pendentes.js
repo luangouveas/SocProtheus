@@ -1,5 +1,5 @@
 require('dotenv').config();
-const { format } = require('date-fns');
+const { format, subDays } = require('date-fns');
 const exportaDadosWs = require('../../controllers/SOC/exportaDadosWs');
 const db = require('../../infra/banco');
 const { ED_LOTES_COD, ED_LOTES_CHAVE, ED_EMPRESA_PRINCIPAL } = process.env;
@@ -8,6 +8,7 @@ module.exports = {
 
     async consumirLotesPendentes(){
         return new Promise(async (resolve, reject) => {    
+            console.log("#2 - Consumindo lotes pendentes de pagamento");
             const df = new Date();
             const di = subDays(df, 15);
 
@@ -18,10 +19,14 @@ module.exports = {
 
             const retorno = await exportaDadosWs.consumirExportaDados(parametros);
 
+            //console.log(parametros);
+
             if(retorno){
                 retorno.forEach(async (lote) => {
                     //console.log('inserindo : ' + lote);
                     
+                    
+
                     await db.salvarLote(lote)
                         .then(() => {
                             resolve();

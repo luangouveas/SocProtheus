@@ -4,9 +4,9 @@
   "description": "Integracao entre os sistemas soc e protheus para pagamento de nf",
   "main": "",
   "scripts": {
-    "start-api": "node --watch ./src/api/index.js",
-    "start-agenda": "node --watch ./src/agenda/index.js",
-    "start-test": "node --watch ./src/test/index.js"
+    "start-api": "node nodemon ./src/api/index.js",
+    "start-agenda": "node nodemon ./src/agenda/index.js",
+    "start-test": "nodemon ./src/tests/index.js"
   },
   "author": "TI - RHMED",
   "license": "ISC",
@@ -24,6 +24,7 @@
     "mongodb": "^5.4.0",
     "mssql": "^9.1.1",
     "node-cron": "^3.0.2",
+    "nodemon": "^2.0.22",
     "request": "^2.88.2",
     "rimraf": "^5.0.0",
     "soap": "^1.0.0",
