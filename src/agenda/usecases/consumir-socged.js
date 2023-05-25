@@ -15,20 +15,20 @@ module.exports = {
 
             const retorno = await exportaDadosWs.consumirExportaDados(parametros);
 
-            if(retorno){
+            if(retorno.length > 0){
+                console.log(`Salvando ${retorno.length} arquivos de SocGed no banco de dados`);
                 retorno.forEach(async (arqGed) => {
-                    //console.log('inserindo : ' + arqGed.NM_GED);
-                    
                     await db.salvarArquivoGed(arqGed)
-                        .then(() => {
-                            resolve();
-                        })
                         .catch((error) => {
-                            reject(error);
+                            console.log(error);
                         });
                     
                 });
+            }else{
+                console.log("Sem retorno de dados de SocGed");
             }
+
+            resolve();
         });        
     }    
 }

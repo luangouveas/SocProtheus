@@ -36,11 +36,12 @@ module.exports = {
                 .then(function (response){
                     xml2js.parseString(response.data, (err, result) => {
                         const ret = result['soap:Envelope']['soap:Body'][0]['ns2:exportaDadosWsResponse'][0]['return'][0]['retorno'][0];
+                        //console.log(JSON.parse(ret));
                         resolve(JSON.parse(ret));
                     });                    
                 })
                 .catch(function (error) {
-                    reject("Ocorreu um erro ao tentar processar exporta dados");
+                    reject("Ocorreu um erro ao tentar processar exporta dados: " + error);
                 })
         });
         

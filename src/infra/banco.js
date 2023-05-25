@@ -37,6 +37,36 @@ async function atualizarArquivoImportado(doc, codArqDigitalizadoAmazon){
     return result;
 }
 
+async function consultarLotesParaPagar(){
+    return new Promise(async (resolve, reject) => {
+        try {
+            var strSql = `SELECT distinct l.codLotePrestadorSoc, l.codPrestador, CONVERT(VARCHAR, l.DtPagamento, 103) AS DtPagamento, l.NumeroLote
+            , REPLACE(REPLACE(REPLACE(l.CNPJPrestador,'.',''),'/',''),'-','') AS CNPJPrestador , CONVERT(VARCHAR, l.DtEmissaoDoc, 103) AS DtEmissaoDoc 
+            , CAST(isnull((select sum(s.valorGlosado) as vlrGlosado from SocProtheus_servicoLotePrestadorSoc s where s.codLotePrestadorSoc = l.codLotePrestadorSoc),0) AS DECIMAL(10,2)) as valorGlosado 
+            , p.estado as UFPrestador
+            , l.codigoLote
+            , CASE WHEN s.codServicoLotePrestadorSoc IS NOT NULL THEN 'SPM' ELSE 'SPS' END AS dscTipoSP
+            , l.NumeroDoc as numNF 
+            , CASE WHEN l.TipoPagamento = 1 THEN 'CREDITO EM CONTA' WHEN l.TipoPagamento = 2 THEN 'BOLETO' ELSE '' END AS dscTipoPagamento
+            FROM SocProtheus_LotePrestadorSoc l 
+            LEFT JOIN prestadorSoc p on p.codigoSoc = l.codPrestador 
+            LEFT JOIN SocProtheus_servicoLotePrestadorSoc s on s.codServicoLotePrestadorSoc = ( SELECT TOP 1 codServicoLotePrestadorSoc FROM SocProtheus_servicoLotePrestadorSoc  
+              WHERE codLotePrestadorSoc = l.codLotePrestadorSoc 
+              AND codigoExame IS NOT NULL) 
+            WHERE l.codPedidoComprasProtheus is null
+            AND l.DtEmissaoDoc is not null
+            AND l.DtPagamento is not null`;
+            
+            //console.log(strSql);
+
+            const result = await sql.query(strSql);
+            resolve(result);
+        } catch (error) {
+            reject('Erro ao buscar dados no banco: ' + error);
+        }
+    });
+}
+
 async function salvarArquivoGed(arquivoGed){
     return new Promise(async (resolve, reject) => {
         try {
@@ -113,15 +143,15 @@ async function salvarLote(lote){
                         TipoPessoa              : lote.TipoPessoa    ,
                         EmailPrestador          : lote.EmailPrestador,
                         NumeroDoc               : lote.NumeroDoc     ,
-                        DtEmissaoDoc            : lote.DtEmissaoDoc  ,
+                        DtEmissaoDoc            : lote.DtEmissaoDoc  == '' ? null : lote.DtEmissaoDoc,
                         ValorDoc                : lote.ValorDoc      ,
-                        DtPostagem              : lote.DtPostagem    ,
-                        DtRecebimento           : lote.DtRecebimento ,
-                        PagarAte                : lote.PagarAte      ,
+                        DtPostagem              : lote.DtPostagem    == '' ? null : lote.DtPostagem,
+                        DtRecebimento           : lote.DtRecebimento == '' ? null : lote.DtRecebimento,
+                        PagarAte                : lote.PagarAte      == '' ? null : lote.PagarAte,
                         TipoPagamento           : lote.TipoPagamento ,
                         NumeroLote              : lote.NumeroLote    ,
                         StatusLote              : lote.StatusLote    ,
-                        DtCriacaoLote           : lote.DtCriacaoLote ,
+                        DtCriacaoLote           : lote.DtCriacaoLote == '' ? null : lote.DtCriacaoLote,
                         PagAntecipado           : lote.PagAntecipado ,
                         CPFPrestador            : lote.CPFPrestador  ,
                         CNPJPrestador           : lote.CNPJPrestador ,
@@ -129,7 +159,7 @@ async function salvarLote(lote){
                         Banco                   : lote.Banco         ,
                         CodigoAgencia           : lote.CodigoAgencia ,
                         ContaCorrente           : lote.ContaCorrente ,
-                        DtPagamento             : lote.DtPagamento   ,
+                        DtPagamento             : lote.DtPagamento   == '' ? null : lote.DtPagamento,
                         datInclusaoRegistro     : now,
                         codStatusAprovacaoFluig : 1,
                         codigoLote              : codigoLote
@@ -156,10 +186,80 @@ async function salvarLote(lote){
     });
 }
 
-module.exports = { 
+async function salvarExamesServicosLote(servico, codLotePrestadorSoc){
+    return new Promise(async (resolve, reject) => {
+        try {
+
+            const now = new Date();
+            const codigoLote = `${servico.COD_PRESTADOR}-${servico.NOME_LOTE}`;
+            
+            await db('SocProtheus_ServicoLotePrestadorSoc')
+            .select()
+            .where('nomeLote', codigoLote)
+            .andWhere('codLotePrestadorSoc', codLotePrestadorSoc)
+            .andWhere(function () {
+                this.where(function () {
+                    this.where('codigoExame', servico.COD_EXAME)
+                    .andWhere('codSequencialFicha', servico.COD_SEQUENCIAL_FICHA);
+                }).orWhere(function () {
+                    this.where('codigoServico', servico.CODIGO_SERVICO)
+                    .andWhere('condicao4', 'valor');
+                });
+            })
+
+            .then(async function(rows){
+                if(rows.length === 0){
+                    await db('SocProtheus_LotePrestadorSoc')
+                    .insert({           
+                        codLotePrestadorSoc     :       codLotePrestadorSoc,
+                        codPrestador            :       servico.COD_PRESTADOR,
+                        CNPJPrestador           :       servico.CNPJ_PRESTADOR,
+                        nomePrestador           :       servico.NOME_PRESTADOR,
+                        DtEmissaoNF             :       servico.DATA_EMISSAO_NF,
+                        DtPagamento             :       servico.DATA_PAGAMENTO,
+                        numNF                   :       servico.NUMERO_NF,
+                        dscObs                  :       servico.OBSERVACAO,
+                        nomeLote                :       codigoLote,
+                        numTaxaAdm              :       servico.TAXA_ADM,
+                        codEmpresa              :       servico.COD_EMPRESA,
+                        nomeEmpresa             :       servico.NOME_EMPRESA,
+                        funcionario             :       servico.FUNCIONARIO,
+                        codSequencialFicha      :       servico.COD_SEQUENCIAL_FICHA,
+                        codigoExame             :       servico.COD_EXAME,
+                        nomeExame               :       servico.NOME_EXAME,
+                        DtResultadoExame        :       servico.DATA_RESULTADO_EXAME,
+                        valorExame              :       servico.VALOR_EXAME,
+                        valorGlosado            :       servico.VALOR_GLOSADO,
+                        codigoServico           :       servico.CODIGO_SERVICO,
+                        nomeServico             :       servico.NOME_SERVICO,
+                        valorServico            :       servico.VALOR_SERVICO,
+                        grupoFatura             :       servico.GRUPO_FATURA,
+                        datInclusaoRegistro     :       now
+                    })
+                    /*.then(function(){
+                        console.log("inseriu!");
+                    })*/
+                    .catch(function(ex) {
+                        //console.log(servico)
+                        reject("Erro: " + ex.message);
+                    });  
+                }
+            })
+            .catch((error) => {
+                reject('Erro: ' + error);
+            });  
+        } catch (error) {
+            reject('Erro ao tentar inserir dado no banco: ' + error);
+        }  
+    })
+}
+
+module.exports ={
     buscarDocumentosLoteSoc,
     inserirArquivoDigitalizadoAmazon,
     atualizarArquivoImportado,
     salvarArquivoGed,
-    salvarLote
+    salvarLote,
+    consultarLotesParaPagar,
+    salvarExamesServicosLote
 }
