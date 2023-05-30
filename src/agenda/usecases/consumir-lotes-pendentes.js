@@ -22,7 +22,7 @@ module.exports = {
             //console.log(parametros);
 
             if(retorno.length > 0){
-                console.log(`Salvando ${retorno.length} lotes pendentes de pagamento no banco de dados`); 
+                console.log(`   Salvando ${retorno.length} lotes pendentes de pagamento no banco de dados`); 
                 retorno.forEach(async (lote) => {
                     //console.log('inserindo : ' + lote);
                     await db.salvarLote(lote)
@@ -32,7 +32,7 @@ module.exports = {
                     
                 });
             }else{
-                console.log("Sem retorno de lotes pendentes para consumir");
+                console.log("   Sem lotes pendentes para consumir");
             }
 
             resolve();

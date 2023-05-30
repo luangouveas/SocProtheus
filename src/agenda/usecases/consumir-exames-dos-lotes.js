@@ -21,23 +21,25 @@ module.exports = {
 
                 lotes.forEach(async (lote) => {
                     const parametros = `{'empresa':'${ED_EMPRESA_PRINCIPAL}','codigo':'${ED_FATURAMENTO_COD}','chave':'${ED_FATURAMENTO_CHAVE}','tipoSaida':'json','codigoPrestador':'${lote.codPrestador}','dataInicio':'${lote.DtPagamento}','dataFim':'${lote.DtPagamento}'}`;
-                    console.log(''  + parametros);
+                    //console.log(''  + parametros);
                     
                     await exportaDadosWs.consumirExportaDados(parametros)
                     .then((retorno) => {
                         if(retorno.length > 0){
-                                console.log(retorno);
                                 retorno.forEach(async (servico) => {
-                                    await db.salvarExamesServicosLote(servico, lote.codLotePrestadorSoc);                            
+                                    await db.salvarExamesServicosLote(servico, lote.codLotePrestadorSoc);  
+                                    //console.log(servico);                          
                                 });
-                            }
+                        }else{
+                            console.log('   Sem exames/serviços para consumir');
+                        }
                     })
                     .catch((error) => {
                         console.log(error);
                     });
                 });
             }else{
-                console.log('Não existem lotes para pagar.');
+                console.log('   Não existem lotes para pagar.');
             }
 
             resolve();

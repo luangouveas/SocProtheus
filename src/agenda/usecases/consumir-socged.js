@@ -12,11 +12,11 @@ module.exports = {
             const dataAtual = new Date();
             const dataAtualFormatada = format(dataAtual, 'dd/MM/yyyy');
             const parametros = `{'empresa':'${ED_EMPRESA_PRINCIPAL}','codigo':'${ED_GED_COD}','chave':'${ED_GED_CHAVE}','tipoSaida':'json','tipoBusca':'0','sequencialFicha':'','cpfFuncionario':'','filtraPorTipoSocged':'true','codigoTipoSocged':'39','dataInicio':'${dataAtualFormatada}','dataFim':'${dataAtualFormatada}','dataEmissaoInicio':'','dataEmissaoFim':''}`;
-
+            //console.log(parametros);
             const retorno = await exportaDadosWs.consumirExportaDados(parametros);
-
+            //console.log(retorno);
             if(retorno.length > 0){
-                console.log(`Salvando ${retorno.length} arquivos de SocGed no banco de dados`);
+                console.log(`   Salvando ${retorno.length} arquivos de SocGed no banco de dados`);
                 retorno.forEach(async (arqGed) => {
                     await db.salvarArquivoGed(arqGed)
                         .catch((error) => {
@@ -25,7 +25,7 @@ module.exports = {
                     
                 });
             }else{
-                console.log("Sem retorno de dados de SocGed");
+                console.log("   Sem dados de SocGed para consumir");
             }
 
             resolve();

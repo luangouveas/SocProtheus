@@ -195,31 +195,30 @@ async function salvarExamesServicosLote(servico, codLotePrestadorSoc){
             
             await db('SocProtheus_ServicoLotePrestadorSoc')
             .select()
-            .where('nomeLote', codigoLote)
+            .where('codigoLote', codigoLote)
             .andWhere('codLotePrestadorSoc', codLotePrestadorSoc)
             .andWhere(function () {
                 this.where(function () {
                     this.where('codigoExame', servico.COD_EXAME)
                     .andWhere('codSequencialFicha', servico.COD_SEQUENCIAL_FICHA);
-                }).orWhere(function () {
-                    this.where('codigoServico', servico.CODIGO_SERVICO)
-                    .andWhere('condicao4', 'valor');
-                });
+                })//.orWhere(function () { //No primeiro momento terá apenas exames
+                //    this.where('codigoServico', servico.CODIGO_SERVICO)
+                //    .andWhere('condicao4', 'valor');
+                //});
             })
-
             .then(async function(rows){
                 if(rows.length === 0){
-                    await db('SocProtheus_LotePrestadorSoc')
+                    await db('SocProtheus_ServicoLotePrestadorSoc')
                     .insert({           
                         codLotePrestadorSoc     :       codLotePrestadorSoc,
                         codPrestador            :       servico.COD_PRESTADOR,
                         CNPJPrestador           :       servico.CNPJ_PRESTADOR,
                         nomePrestador           :       servico.NOME_PRESTADOR,
-                        DtEmissaoNF             :       servico.DATA_EMISSAO_NF,
-                        DtPagamento             :       servico.DATA_PAGAMENTO,
+                        DtEmissaoNF             :       servico.DATA_EMISSAO_NF == '' ? null : servico.DATA_EMISSAO_NF,
+                        DtPagamento             :       servico.DATA_PAGAMENTO  == '' ? null : servico.DATA_PAGAMENTO,
                         numNF                   :       servico.NUMERO_NF,
                         dscObs                  :       servico.OBSERVACAO,
-                        nomeLote                :       codigoLote,
+                        nomeLote                :       servico.NOME_LOTE,
                         numTaxaAdm              :       servico.TAXA_ADM,
                         codEmpresa              :       servico.COD_EMPRESA,
                         nomeEmpresa             :       servico.NOME_EMPRESA,
@@ -227,13 +226,14 @@ async function salvarExamesServicosLote(servico, codLotePrestadorSoc){
                         codSequencialFicha      :       servico.COD_SEQUENCIAL_FICHA,
                         codigoExame             :       servico.COD_EXAME,
                         nomeExame               :       servico.NOME_EXAME,
-                        DtResultadoExame        :       servico.DATA_RESULTADO_EXAME,
+                        DtResultadoExame        :       servico.DATA_RESULTADO_EXAME == '' ? null : servico.DATA_RESULTADO_EXAME,
                         valorExame              :       servico.VALOR_EXAME,
                         valorGlosado            :       servico.VALOR_GLOSADO,
                         codigoServico           :       servico.CODIGO_SERVICO,
                         nomeServico             :       servico.NOME_SERVICO,
                         valorServico            :       servico.VALOR_SERVICO,
                         grupoFatura             :       servico.GRUPO_FATURA,
+                        codigoLote              :       codigoLote,
                         datInclusaoRegistro     :       now
                     })
                     /*.then(function(){
@@ -241,9 +241,12 @@ async function salvarExamesServicosLote(servico, codLotePrestadorSoc){
                     })*/
                     .catch(function(ex) {
                         //console.log(servico)
-                        reject("Erro: " + ex.message);
+                        console.log(ex)
+                        //reject("Erro: " + ex.message);
                     });  
                 }
+
+                resolve();
             })
             .catch((error) => {
                 reject('Erro: ' + error);
