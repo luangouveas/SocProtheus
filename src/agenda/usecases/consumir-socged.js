@@ -19,13 +19,12 @@ module.exports = {
                 console.log(`   Salvando ${retorno.length} arquivos de SocGed no banco de dados`);
                 retorno.forEach(async (arqGed) => {
                     await db.salvarArquivoGed(arqGed)
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                    
+                    .catch((error) => {
+                        reject(error);
+                    });
                 });
             }else{
-                console.log("   Sem dados de SocGed para consumir");
+                reject("   Sem dados de SocGed para consumir");
             }
 
             resolve();

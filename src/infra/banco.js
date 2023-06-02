@@ -67,6 +67,107 @@ async function consultarLotesParaPagar(){
     });
 }
 
+async function consultarExamesDoLote(codLotePrestadorSoc){
+    return new Promise(async (resolve, reject) => {
+        try {
+            var strSql = `SELECT DISTINCT CONVERT(CHAR(10), GETDATE(), 103) AS DATAPREVENT
+            , CONVERT(CHAR(10), GETDATE(), 103) AS DATAVENCPREV
+            , '0' AS DESCONTO
+            , '0' AS DESPESA
+            , COUNT(sl.codigoExame) AS QTD
+            , CAST(SUM(sl.valorExame)  AS DECIMAL(10,2)) as VALORTOTAL
+            , CAST(SUM(sl.valorExame) / COUNT(sl.codigoExame)  AS DECIMAL(10,2)) AS VALORUNIT
+            , CASE WHEN em.codEmpresa = 4635 AND ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 0 THEN '4230102'
+                WHEN em.codEmpresa = 4635 AND isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) = 99 THEN '4230206'
+                WHEN em.codEmpresa = 4635 AND isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) <> 99 THEN '4230202'
+                WHEN isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) = 99 THEN '4230206'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 0 THEN '4230101'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 1 THEN '4230201'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 2 THEN '4230204'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 3 THEN '4230203'
+                ELSE '4230101'
+            END AS Produto
+            , PCC.numProtheusCentroCusto
+            FROM SocProtheus_servicoLotePrestadorSoc sl
+            LEFT JOIN tipoExame te on te.codTipoExame = (select top 1 tex.codTipoExame from tipoexame tex
+                                                         where tex.codExameSoc = sl.codigoExame collate Latin1_General_CI_AS )
+            LEFT JOIN servico s on s.codtipoExame = te.codtipoExame
+            LEFT JOIN DeParaExamesGerenciadorSocVidaweb DPE on DPE.codDeParaExamesGerenciadorSocVidaweb = (select top 1 dpe2.codDeParaExamesGerenciadorSocVidaweb 
+                                                                            from DeParaExamesGerenciadorSocVidaweb dpe2
+                                                                            where dpe2.codOrigem = sl.codigoServico collate Latin1_General_CI_AS)
+            LEFT JOIN Servico                     AS s2  ON s2.codservico                = DPE.codservico
+            LEFT JOIN tipoexame te2 on te2.codTipoExame = s2.codTipoExame
+            LEFT JOIN ProtheusCentroCusto         AS PCC ON (PCC.codProtheusCentroCusto = ISNULL(s.codProtheusCentroCusto, ISNULL(s2.codProtheusCentroCusto, 1)))
+            LEFT JOIN empresa em on em.codEmpresaSoc = sl.codEmpresa
+            WHERE sl.codLotePrestadorSoc = ${codLotePrestadorSoc}
+            and sl.codigoExame is not null
+            and sl.codigoExame <> 'CLINICO'
+            GROUP BY PCC.numProtheusCentroCusto
+            ,  CASE WHEN em.codEmpresa = 4635 AND ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 0 THEN '4230102'
+                WHEN em.codEmpresa = 4635 AND isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) = 99 THEN '4230206'
+                WHEN em.codEmpresa = 4635 AND isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) <> 99 THEN '4230202'
+                WHEN isnull(s.codProtheusCentroCusto, s2.codProtheusCentroCusto) = 99 THEN '4230206'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 0 THEN '4230101'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 1 THEN '4230201'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 2 THEN '4230204'
+                WHEN ISNULL(te.codTipoExameComplementar, isnull(te2.codTipoExameComplementar, 0)) = 3 THEN '4230203'
+            ELSE '4230101' end
+                                
+            UNION
+            SELECT DISTINCT CONVERT(CHAR(10), GETDATE(), 103) AS DATAPREVENT
+            , CONVERT(CHAR(10), GETDATE(), 103) AS DATAVENCPREV
+            , '0' AS DESCONTO
+            , '0' AS DESPESA
+            , COUNT(sl.codigoExame) AS QTD
+            , CAST(SUM(sl.valorExame)  AS DECIMAL(10, 2)) as VALORTOTAL
+            , CAST(SUM(sl.valorExame) / COUNT(sl.codigoExame)  AS DECIMAL(10, 2)) AS VALORUNIT
+            , CASE WHEN em.codEmpresa = 4635 THEN '4230102'
+                ELSE '4230101'
+            END AS Produto
+            , PCC.numProtheusCentroCusto
+            FROM SocProtheus_servicoLotePrestadorSoc sl 
+            INNER JOIN servico s on s.CodServico = 153
+            INNER JOIN ProtheusCentroCusto AS PCC ON(PCC.codProtheusCentroCusto = s.codProtheusCentroCusto)
+            LEFT JOIN empresa em on em.codEmpresaSoc = sl.codEmpresa
+            WHERE sl.codLotePrestadorSoc = ${codLotePrestadorSoc}
+            and sl.codigoExame is not null
+            and sl.codigoExame = 'CLINICO'
+            GROUP BY PCC.numProtheusCentroCusto
+            ,  CASE WHEN em.codEmpresa = 4635 THEN '4230102' 
+            ELSE '4230101' end 
+            
+            UNION
+            SELECT CONVERT(CHAR(10), GETDATE(), 103) AS DATAPREVENT
+            , CONVERT(CHAR(10), GETDATE(), 103) AS DATAVENCPREV
+            , '0' AS DESCONTO
+            , '0' AS DESPESA
+            , COUNT(sl.codigoServico) AS QTD
+            , CAST(SUM(sl.valorServico)  AS DECIMAL(10,2)) as VALORTOTAL
+            , CAST(SUM(sl.valorServico) / COUNT(sl.codigoServico)  AS DECIMAL(10,2)) AS VALORUNIT
+            , ISNULL(CASE WHEN em.codEmpresa = 4635 AND s.codServico IN(3019, 2124) THEN 4250205 
+                    ELSE ISNULL(s.codProtheusPedidoCompra, s.DscServico)  
+                END,999999)  AS Produto
+            , PCC.numProtheusCentroCusto
+            FROM SocProtheus_servicoLotePrestadorSoc sl
+            LEFT JOIN servico s on s.codServicoSoc = sl.codigoServico
+            LEFT JOIN empresa em on em.codEmpresaSoc = sl.codEmpresa
+            LEFT JOIN ProtheusCentroCusto     AS PCC ON (PCC.codProtheusCentroCusto = ISNULL(s.codProtheusCentroCusto, 1))
+            WHERE sl.codLotePrestadorSoc = ${codLotePrestadorSoc}
+            and sl.codigoServico is not null and sl.codigoServico <> ''
+            group by PCC.numProtheusCentroCusto
+            ,CASE WHEN em.codEmpresa = 4635 AND s.codServico IN(3019, 2124) THEN 4250205 
+            ELSE ISNULL(s.codProtheusPedidoCompra, s.DscServico)  
+            END`
+
+            //console.log(strSql);
+            const result = await sql.query(strSql);
+            resolve(result);
+        } catch (error) {
+            reject('Erro ao buscar dados no banco: ' + error);
+        }
+    });
+}
+
 async function salvarArquivoGed(arquivoGed){
     return new Promise(async (resolve, reject) => {
         try {
@@ -264,5 +365,6 @@ module.exports ={
     salvarArquivoGed,
     salvarLote,
     consultarLotesParaPagar,
-    salvarExamesServicosLote
+    salvarExamesServicosLote,
+    consultarExamesDoLote
 }

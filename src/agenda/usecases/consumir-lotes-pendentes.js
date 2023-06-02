@@ -12,27 +12,23 @@ module.exports = {
             const df = new Date();
             const di = subDays(df, 15);
 
-            const dataFinal = format(df, 'dd/MM/yyyy');
-            const dataInicial = format(di, 'dd/MM/yyyy');
+            const dataFinal     = format(df, 'dd/MM/yyyy');
+            const dataInicial   = format(di, 'dd/MM/yyyy');
 
             const parametros = `{'empresa':'${ED_EMPRESA_PRINCIPAL}','codigo':'${ED_LOTES_COD}','chave':'${ED_LOTES_CHAVE}','tipoSaida':'json','codigoPrestador':'','cnpjPrestador':'','cpfPrestador':'','numeroLote':'','numeroDoc':'','dataInicial':'${dataInicial}', 'dataFinal':'${dataFinal}','statusLote':'3'}`;
 
-            const retorno = await exportaDadosWs.consumirExportaDados(parametros);
-
-            //console.log(parametros);
+            const retorno = await exportaDadosWs.consumirExportaDados(parametros); 
 
             if(retorno.length > 0){
                 console.log(`   Salvando ${retorno.length} lotes pendentes de pagamento no banco de dados`); 
                 retorno.forEach(async (lote) => {
-                    //console.log('inserindo : ' + lote);
                     await db.salvarLote(lote)
-                        .catch((error) => {
-                            console.log(error);
-                        });
-                    
+                    .catch((error) => {
+                        reject(error);
+                    });
                 });
             }else{
-                console.log("   Sem lotes pendentes para consumir");
+                reject("   Sem lotes pendentes para consumir");
             }
 
             resolve();

@@ -28,20 +28,20 @@ module.exports = {
                 headers : {
                     'Accept-Encoding':'gzip,deflate',
                     'SOAPAction':'',
-                    'Content-Type':'text/xml;charset=Utf-8'
+                    //'Content-Type':'text/xml;charset=Utf-8'
                 }
             }
-    
-            await axios.post(process.env.URL_SERVICE_EXPORTA_DADOS, montarXml(parametros), options)
+            
+            await axios.post(process.env.URL_SERVICE_EXPORTA_DADOS + parametros, options)
                 .then(function (response){
-                    xml2js.parseString(response.data, (err, result) => {
-                        const ret = result['soap:Envelope']['soap:Body'][0]['ns2:exportaDadosWsResponse'][0]['return'][0]['retorno'][0];
-                        //console.log(JSON.parse(ret));
-                        resolve(JSON.parse(ret));
-                    });                    
+                    //xml2js.parseString(response.data, (err, result) => {
+                        //const ret = result['soap:Envelope']['soap:Body'][0]['ns2:exportaDadosWsResponse'][0]['return'][0]['retorno'][0];
+                        //console.log(response.data);
+                        resolve(response.data);
+                    //});                    
                 })
                 .catch(function (error) {
-                    reject("Ocorreu um erro ao tentar processar exporta dados: " + error);
+                    reject("Ocorreu um erro ao tentar processar exporta dados: " + parametros + ": " + error);
                 })
         });
         

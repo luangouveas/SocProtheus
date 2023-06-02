@@ -18,10 +18,14 @@ const sqlConfig = {
 }
 
 async function conectar(){
-    mssql.connect(sqlConfig, function(err){
-        if(err) console.log(err)
-        console.log('conectou')
-    })
+    return new Promise(async (resolve, reject) => {
+        try {
+            await mssql.connect(sqlConfig);
+            resolve();
+        } catch (error) {
+            reject(error);   
+        }
+    });
 }
 
 async function query(strQuery){
